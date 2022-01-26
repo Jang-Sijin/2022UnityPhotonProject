@@ -20,8 +20,7 @@ namespace Complete
             Destroy (gameObject, m_MaxLifeTime);
             // PV.RPC("DestroyRPC", RpcTarget.AllBuffered);
         }
-
-
+        
         private void OnTriggerEnter (Collider other)
         {
             // Collect all the colliders in a sphere from the shell's current position to a radius of the explosion radius.

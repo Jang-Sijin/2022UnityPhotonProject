@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
+    public string PlayerName;
+
     public static PlayerManager instance; // Scenes Manager를 싱글톤으로 관리
     private void Awake()
     {
@@ -15,7 +17,7 @@ public class PlayerManager : MonoBehaviour
         } 
         else
         { 
-            Destroy(gameObject);  
+            Destroy(gameObject);
         }
     }
     

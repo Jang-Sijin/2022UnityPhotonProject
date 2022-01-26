@@ -26,10 +26,9 @@ namespace Complete
         {
             // 폭발 조립식을 인스턴스화하고 그 위에 있는 입자 시스템에 대한 참조를 가져옵니다.
             // Instantiate the explosion prefab and get a reference to the particle system on it.
-            // m_ExplosionParticles = Instantiate (m_ExplosionPrefab).GetComponent<ParticleSystem>();
-            m_ExplosionParticles = PhotonNetwork
-                .Instantiate("CompleteTankExplosion", Vector3.zero, Quaternion.identity)
-                .GetComponent<ParticleSystem>();
+            m_ExplosionParticles = Instantiate (m_ExplosionPrefab).GetComponent<ParticleSystem>(); 
+            // m_ExplosionParticles = PhotonNetwork.Instantiate("CompleteTankExplosion", Vector3.zero, Quaternion.identity).GetComponent<ParticleSystem>();;
+                    
 
             // 인스턴스화된 프리팹에서 오디오 소스에 대한 참조를 가져옵니다.
             // Get a reference to the audio source on the instantiated prefab.
@@ -66,7 +65,7 @@ namespace Complete
             // If the current health is at or below zero and it has not yet been registered, call OnDeath.
             if (m_CurrentHealth <= 0f && !m_Dead)
             {
-                OnDeath ();
+                OnDeath();
             }
         }
 
@@ -80,9 +79,11 @@ namespace Complete
             m_FillImage.color = Color.Lerp (m_ZeroHealthColor, m_FullHealthColor, m_CurrentHealth / m_StartingHealth);
         }
 
-
+        
         private void OnDeath ()
         {
+            // Debug.Log($"OnDeath(사망처리) 동기화!");
+            
             // Set the flag so that this function is only called once.
             m_Dead = true;
 

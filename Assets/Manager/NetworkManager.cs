@@ -15,6 +15,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [Header("DisconnectPanel")]
     public GameObject DisconnectPanel;
     public InputField NickNameInput;
+    public GameObject ErrorPanel;
 
     [Header("LobbyPanel")]
     public GameObject LobbyPanel;
@@ -60,16 +61,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        if (PhotonNetwork.NetworkClientState.ToString() == "Joined")
-        {
-            NickNameInput.text = PhotonNetwork.LocalPlayer.NickName; 
-            OnJoinedRoom();
-        }
-        else if (PhotonNetwork.NetworkClientState.ToString() == "JoinedLobby")
-        {
-            NickNameInput.text = PhotonNetwork.LocalPlayer.NickName;
-            OnJoinedLobby();
-        }
     }
 
     void Update()
@@ -78,7 +69,22 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         LobbyInfoText.text = (PhotonNetwork.CountOfPlayers - PhotonNetwork.CountOfPlayersInRooms) + "로비 / " + PhotonNetwork.CountOfPlayers + "접속";
     }
 
-    public void Connect() => PhotonNetwork.ConnectUsingSettings();
+    public void Connect()
+    {
+        if (NickNameInput.text != "")
+        {
+            PhotonNetwork.ConnectUsingSettings();
+        }
+        else
+        {
+            ErrorPanel.SetActive(true);
+        }
+    }
+
+    public void ErrorPanelClose()
+    {
+        ErrorPanel.SetActive(false);
+    }
 
     public override void OnConnectedToMaster() => PhotonNetwork.JoinLobby();
 
@@ -87,7 +93,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         // 로비 화면
         LobbyPanel.SetActive(true);
         RoomPanel.SetActive(false);
-        PhotonNetwork.LocalPlayer.NickName = NickNameInput.text;
+        if (PlayerManager.instance.PlayerName == "")
+        {
+            PhotonNetwork.LocalPlayer.NickName = PlayerManager.instance.PlayerName = NickNameInput.text;
+        }
+        else
+        {
+            PhotonNetwork.LocalPlayer.NickName = NickNameInput.text = PlayerManager.instance.PlayerName;   
+        }
         WelcomeText.text = PhotonNetwork.LocalPlayer.NickName + "님 환영합니다";
         myList.Clear();
         

@@ -23,8 +23,6 @@ namespace Complete
         private float m_OriginalPitch;              // The pitch of the audio source at the start of the scene.
         private ParticleSystem[] m_particleSystems; // References to all the particles systems used by the Tanks
 
-        private Rigidbody m_NetworkRigidbody; // 다른 플레이어의 Rigidbody
-
         private void Awake ()
         {
             m_Rigidbody = GetComponent<Rigidbody> ();
@@ -122,7 +120,7 @@ namespace Complete
             // 자신의 Photon View이면 물리 업데이트
             if (PV.IsMine)
             {
-                Debug.Log($"[Player 탱크 이동중] 위치:{m_Rigidbody.position}, 회전:{m_Rigidbody.rotation}, 속도:{m_Rigidbody.velocity}");
+                // Debug.Log($"[Player 탱크 이동중] 위치:{m_Rigidbody.position}, 회전:{m_Rigidbody.rotation}, 속도:{m_Rigidbody.velocity}");
                 // Adjust the rigidbodies position and orientation in FixedUpdate.
                 Move(m_Rigidbody);
                 Turn(m_Rigidbody);

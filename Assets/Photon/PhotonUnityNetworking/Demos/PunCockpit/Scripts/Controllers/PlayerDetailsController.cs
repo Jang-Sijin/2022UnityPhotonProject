@@ -113,7 +113,7 @@ namespace Photon.Pun.Demo.Cockpit
                 switch (_byteKey)
                 {
                     case (byte)255:
-                        return "PlayerName";
+                        return "LocalPlayerName";
                     case (byte)254:
                         return "Inactive";
                     case (byte)253:

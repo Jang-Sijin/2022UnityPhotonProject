@@ -93,13 +93,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         // 로비 화면
         LobbyPanel.SetActive(true);
         RoomPanel.SetActive(false);
-        if (PlayerManager.instance.PlayerName == "")
+        if (PlayerManager.instance.LocalPlayerName == "")
         {
-            PhotonNetwork.LocalPlayer.NickName = PlayerManager.instance.PlayerName = NickNameInput.text;
+            PhotonNetwork.LocalPlayer.NickName = PlayerManager.instance.LocalPlayerName = NickNameInput.text;
         }
         else
         {
-            PhotonNetwork.LocalPlayer.NickName = NickNameInput.text = PlayerManager.instance.PlayerName;   
+            PhotonNetwork.LocalPlayer.NickName = NickNameInput.text = PlayerManager.instance.LocalPlayerName;   
         }
         WelcomeText.text = PhotonNetwork.LocalPlayer.NickName + "님 환영합니다";
         myList.Clear();

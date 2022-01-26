@@ -1,4 +1,5 @@
 ﻿using System;
+using Photon.Pun;
 using UnityEngine;
 
 namespace Complete
@@ -22,7 +23,6 @@ namespace Complete
         private TankMovement m_Movement;                        // Reference to tank's movement script, used to disable and enable control.
         private TankShooting m_Shooting;                        // Reference to tank's shooting script, used to disable and enable control.
         private GameObject m_CanvasGameObject;                  // Used to disable the world space UI during the Starting and Ending phases of each round.
-
 
         public void Setup ()
         {
@@ -71,10 +71,10 @@ namespace Complete
 
 
         // Used at the start of each round to put the tank into it's default state.
-        public void Reset ()
+        public void Reset (Transform spawnPoint)
         {
-            m_Instance.transform.position = m_SpawnPoint.position;
-            m_Instance.transform.rotation = m_SpawnPoint.rotation;
+            m_Instance.transform.position = spawnPoint.position;
+            m_Instance.transform.rotation = spawnPoint.rotation;
 
             m_Instance.SetActive (false);
             m_Instance.SetActive (true);

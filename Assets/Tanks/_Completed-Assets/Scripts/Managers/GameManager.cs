@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -9,7 +10,8 @@ namespace Complete
 {
     public class GameManager : MonoBehaviourPunCallbacks
     {
-
+        public PhotonView PV;
+        
         public int m_NumRoundsToWin = 5;            // The number of rounds a single player has to win to win the game.
         public float m_StartDelay = 3f;             // The delay between the start of RoundStarting and RoundPlaying phases.
         public float m_EndDelay = 3f;               // The delay between the end of RoundPlaying and RoundEnding phases.
@@ -17,8 +19,7 @@ namespace Complete
         public Text m_MessageText;                  // Reference to the overlay Text to display winning text, etc.
         // public GameObject m_TankPrefab;             // Reference to the prefab the players will control.
         public TankManager[] m_MyTank;               // A collection of managers for enabling and disabling different aspects of the tanks.
-        public Transform[] m_SpawnPoints;
-        public GameObject[] m_Tanks;
+        public List<Transform> SpawnPoints;
 
 
         private int m_RoundNumber;                  // Which round the game is currently on.
@@ -35,13 +36,6 @@ namespace Complete
         
         private void Start()
         {
-            m_NetworkPlayers = PhotonNetwork.PlayerList;
-
-            foreach (Player player in m_NetworkPlayers)
-            {
-                print($"{player.NickName}");
-            }
-
             // This line fixes a change to the physics engine.
             Physics.defaultMaxDepenetrationVelocity = k_MaxDepenetrationVelocity;
             
@@ -49,23 +43,13 @@ namespace Complete
             m_StartWait = new WaitForSeconds (m_StartDelay);
             m_EndWait = new WaitForSeconds (m_EndDelay);
 
-            // Debug.Log($"test: {GameObject.FindGameObjectsWithTag("Player")}");
-
-            for (int i = 0; i < m_Tanks.Length; i++)
-            {
-                Debug.Log($"탱크 번호:{m_Tanks[i]}");
-
-                // m_Tanks[i].GetComponent<TankManager>().m_SpawnPoint = m_SpawnPoints[i];
-            }
-
             SpawnAllTanks();
             SetCameraTargets();
 
             // Once the tanks have been created and the camera is using them as targets, start the game.
             StartCoroutine (GameLoop ());
         }
-
-
+        
         private void SpawnAllTanks()
         {
             Debug.Log($"[장시진] 플레이어 개수:{m_MyTank.Length}");
@@ -75,9 +59,22 @@ namespace Complete
                 // ... create them, set their player number and references needed for control.
                 
                 // 플레이어 캐릭터 생성 (Photon)
-                m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank", m_MyTank[i].m_SpawnPoint.position, m_MyTank[i].m_SpawnPoint.rotation) as GameObject;
-                    // Instantiate(m_TankPrefab, m_MyTank[i].m_SpawnPoint.position, m_MyTank[i].m_SpawnPoint.rotation) as GameObject;
-                    
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank",
+                        SpawnPoints[0].position, SpawnPoints[0].rotation) as GameObject;
+                    SpawnPoints.RemoveAt(0);
+                }
+                else
+                {
+                    m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank",
+                        SpawnPoints[1].position, SpawnPoints[1].rotation) as GameObject;
+                    SpawnPoints.RemoveAt(0);
+                }
+                // Instantiate(m_TankPrefab, m_MyTank[i].m_SpawnPoint.position, m_MyTank[i].m_SpawnPoint.rotation) as GameObject;
+                
+                PlayerManager.instance.PlayerAddList(m_MyTank[i].m_Instance); // 플레이어 리스트에 생성된 플레이어를 추가
+
                 m_MyTank[i].m_PlayerNumber = i + 1;
                 m_MyTank[i].Setup();
             }
@@ -281,7 +278,7 @@ namespace Complete
         {
             for (int i = 0; i < m_MyTank.Length; i++)
             {
-                m_MyTank[i].Reset();
+                m_MyTank[i].Reset(SpawnPoints[i]);
             }
         }
 

@@ -22,7 +22,7 @@ namespace Photon.Pun.Demo.PunBasics
 		#region Private Constants
 
 		// Store the PlayerPref Key to avoid typos
-		const string playerNamePrefKey = "PlayerName";
+		const string playerNamePrefKey = "LocalPlayerName";
 
 		#endregion
 

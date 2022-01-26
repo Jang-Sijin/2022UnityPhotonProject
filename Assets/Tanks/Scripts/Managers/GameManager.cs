@@ -71,7 +71,7 @@ public class GameManager : MonoBehaviour
 
 /*        if (m_GameWinner != null)
         {
-            SceneManager.LoadScene(0);
+            SceneManager.TitleScene(0);
         }
         else
         {

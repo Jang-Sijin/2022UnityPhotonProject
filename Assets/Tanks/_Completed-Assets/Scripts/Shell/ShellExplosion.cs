@@ -1,8 +1,9 @@
+using Photon.Pun;
 using UnityEngine;
 
 namespace Complete
 {
-    public class ShellExplosion : MonoBehaviour
+    public class ShellExplosion : MonoBehaviour // ShellExplosion.cs No Photon Settings
     {
         public LayerMask m_TankMask;                        // Used to filter what the explosion affects, this should be set to "Players".
         public ParticleSystem m_ExplosionParticles;         // Reference to the particles that will play on explosion.
@@ -17,56 +18,62 @@ namespace Complete
         {
             // If it isn't destroyed by then, destroy the shell after it's lifetime.
             Destroy (gameObject, m_MaxLifeTime);
+            // PV.RPC("DestroyRPC", RpcTarget.AllBuffered);
         }
 
 
         private void OnTriggerEnter (Collider other)
         {
-			// Collect all the colliders in a sphere from the shell's current position to a radius of the explosion radius.
-            Collider[] colliders = Physics.OverlapSphere (transform.position, m_ExplosionRadius, m_TankMask);
+            // Collect all the colliders in a sphere from the shell's current position to a radius of the explosion radius.
+                Collider[] colliders = Physics.OverlapSphere(transform.position, m_ExplosionRadius, m_TankMask);
 
-            // Go through all the colliders...
-            for (int i = 0; i < colliders.Length; i++)
-            {
-                // ... and find their rigidbody.
-                Rigidbody targetRigidbody = colliders[i].GetComponent<Rigidbody> ();
+                // Go through all the colliders...
+                for (int i = 0; i < colliders.Length; i++)
+                {
+                    // ... and find their rigidbody.
+                    Rigidbody targetRigidbody = colliders[i].GetComponent<Rigidbody>();
 
-                // If they don't have a rigidbody, go on to the next collider.
-                if (!targetRigidbody)
-                    continue;
+                    // If they don't have a rigidbody, go on to the next collider.
+                    if (!targetRigidbody)
+                        continue;
 
-                // Add an explosion force.
-                targetRigidbody.AddExplosionForce (m_ExplosionForce, transform.position, m_ExplosionRadius);
+                    // Add an explosion force.
+                    targetRigidbody.AddExplosionForce(m_ExplosionForce, transform.position, m_ExplosionRadius);
 
-                // Find the TankHealth script associated with the rigidbody.
-                TankHealth targetHealth = targetRigidbody.GetComponent<TankHealth> ();
+                    // Find the TankHealth script associated with the rigidbody.
+                    TankHealth targetHealth = targetRigidbody.GetComponent<TankHealth>();
 
-                // If there is no TankHealth script attached to the gameobject, go on to the next collider.
-                if (!targetHealth)
-                    continue;
+                    // If there is no TankHealth script attached to the gameobject, go on to the next collider.
+                    if (!targetHealth)
+                        continue;
 
-                // Calculate the amount of damage the target should take based on it's distance from the shell.
-                float damage = CalculateDamage (targetRigidbody.position);
+                    // Calculate the amount of damage the target should take based on it's distance from the shell.
+                    float damage = CalculateDamage(targetRigidbody.position);
 
-                // Deal this damage to the tank.
-                targetHealth.TakeDamage (damage);
-            }
+                    // Deal this damage to the tank.
+                    // targetHealth.TakeDamage(damage);
+                    
+                    targetHealth.PV.RPC("TakeDamage", RpcTarget.All, damage); 
+                }
 
-            // Unparent the particles from the shell.
-            m_ExplosionParticles.transform.parent = null;
+                // Unparent the particles from the shell.
+                m_ExplosionParticles.transform.parent = null;
+                
+                 // Play the particle system.
+                m_ExplosionParticles.Play();
+                
+                // // Play the explosion sound effect.
+                m_ExplosionAudio.Play();
+                // PV.RPC("ExplosionParticlesRPC", RpcTarget.AllBuffered);
 
-            // Play the particle system.
-            m_ExplosionParticles.Play();
+                // Once the particles have finished, destroy the gameobject they are on.
+                ParticleSystem.MainModule mainModule = m_ExplosionParticles.main;
+                Destroy(m_ExplosionParticles.gameObject, mainModule.duration);
+                // PV.RPC("DestroyParticlesRPC", RpcTarget.AllBuffered);
 
-            // Play the explosion sound effect.
-            m_ExplosionAudio.Play();
-
-            // Once the particles have finished, destroy the gameobject they are on.
-            ParticleSystem.MainModule mainModule = m_ExplosionParticles.main;
-            Destroy (m_ExplosionParticles.gameObject, mainModule.duration);
-
-            // Destroy the shell.
-            Destroy (gameObject);
+                // Destroy the shell.
+                Destroy(gameObject);
+                // PV.RPC("DestroyShellRPC", RpcTarget.AllBuffered);
         }
 
 
@@ -88,6 +95,28 @@ namespace Complete
             damage = Mathf.Max (0f, damage);
 
             return damage;
+        }
+        
+        [PunRPC]
+        private void DestroyRPC() => Destroy (gameObject, m_MaxLifeTime);
+        
+        [PunRPC]
+        private void DestroyShellRPC() => Destroy(gameObject);
+        
+        [PunRPC]
+        private void DestroyParticlesRPC() => Destroy(m_ExplosionParticles.gameObject, m_ExplosionParticles.main.duration);
+
+        [PunRPC]
+        private void ExplosionParticlesRPC()
+        {
+            // Unparent the particles from the shell.
+            m_ExplosionParticles.transform.parent = null;
+
+            // Play the particle system.
+            m_ExplosionParticles.Play();
+
+            // Play the explosion sound effect.
+            m_ExplosionAudio.Play();
         }
     }
 }

@@ -2,17 +2,18 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Photon.Pun;
 
 namespace Complete
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : MonoBehaviourPunCallbacks
     {
         public int m_NumRoundsToWin = 5;            // The number of rounds a single player has to win to win the game.
         public float m_StartDelay = 3f;             // The delay between the start of RoundStarting and RoundPlaying phases.
         public float m_EndDelay = 3f;               // The delay between the end of RoundPlaying and RoundEnding phases.
         public CameraControl m_CameraControl;       // Reference to the CameraControl script for control during different phases.
         public Text m_MessageText;                  // Reference to the overlay Text to display winning text, etc.
-        public GameObject m_TankPrefab;             // Reference to the prefab the players will control.
+        // public GameObject m_TankPrefab;             // Reference to the prefab the players will control.
         public TankManager[] m_Tanks;               // A collection of managers for enabling and disabling different aspects of the tanks.
 
         
@@ -45,12 +46,16 @@ namespace Complete
 
         private void SpawnAllTanks()
         {
+            Debug.Log($"{m_Tanks.Length}");
             // For all the tanks...
             for (int i = 0; i < m_Tanks.Length; i++)
             {
                 // ... create them, set their player number and references needed for control.
-                m_Tanks[i].m_Instance =
-                    Instantiate(m_TankPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                
+                // 플레이어 캐릭터 생성 (Photon)
+                m_Tanks[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank", m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                    // Instantiate(m_TankPrefab, m_Tanks[i].m_SpawnPoint.position, m_Tanks[i].m_SpawnPoint.rotation) as GameObject;
+                    
                 m_Tanks[i].m_PlayerNumber = i + 1;
                 m_Tanks[i].Setup();
             }
@@ -78,19 +83,20 @@ namespace Complete
         private IEnumerator GameLoop ()
         {
             // Start off by running the 'RoundStarting' coroutine but don't return until it's finished.
-            yield return StartCoroutine (RoundStarting ());
+            // yield return StartCoroutine (RoundStarting ());
 
             // Once the 'RoundStarting' coroutine is finished, run the 'RoundPlaying' coroutine but don't return until it's finished.
             yield return StartCoroutine (RoundPlaying());
 
             // Once execution has returned here, run the 'RoundEnding' coroutine, again don't return until it's finished.
-            yield return StartCoroutine (RoundEnding());
+            // yield return StartCoroutine (RoundEnding());
 
             // This code is not run until 'RoundEnding' has finished.  At which point, check if a game winner has been found.
             if (m_GameWinner != null)
             {
                 // If there is a game winner, restart the level.
-                SceneManager.LoadScene (0);
+                // SceneManager.TitleScene (0);
+                ScenesManager.instance.LoadScene("1.TitleScene");
             }
             else
             {
@@ -98,6 +104,12 @@ namespace Complete
                 // Note that this coroutine doesn't yield.  This means that the current version of the GameLoop will end.
                 StartCoroutine (GameLoop ());
             }
+        }
+
+        public void ExitButton()
+        {
+            ScenesManager.instance.LoadScene("1.TitleScene");
+            PhotonNetwork.LeaveRoom();
         }
 
 
@@ -122,7 +134,7 @@ namespace Complete
         private IEnumerator RoundPlaying ()
         {
             // As soon as the round begins playing let the players control the tanks.
-            EnableTankControl ();
+            EnableTankControl();
 
             // Clear the text from the screen.
             m_MessageText.text = string.Empty;

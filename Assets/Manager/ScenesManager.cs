@@ -1,12 +1,10 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Generic;using Photon.Pun;
 using Unity.VisualScripting;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class ScenesManager : MonoBehaviour
+public class ScenesManager : MonoBehaviourPunCallbacks // MonoBehaviour
 {
     // 불러올 로딩 씬
     public string loadingSceneName;
@@ -14,8 +12,7 @@ public class ScenesManager : MonoBehaviour
     public string loadSceneName;
     public string unLoadSceneName;
     // 불러올 다음 씬
-    [SerializeField]
-    private string nextSceneName;
+    public string nextSceneName { get; set; }
 
     private Scene[] SceneSetup;
 
@@ -48,7 +45,12 @@ public class ScenesManager : MonoBehaviour
         // SceneManager.LoadSceneAsync(loadingSceneName, LoadSceneMode.Single);
         // Debug.Log($"[장시진] 로딩씬 로드중...");
         
-        // StartCoroutine(LoadScene());
+        // StartCoroutine(TitleScene());
+        
+        PhotonNetwork.AutomaticallySyncScene = true;
+        PhotonNetwork.SendRate = 40;
+        PhotonNetwork.SerializationRate = 20;
+        PhotonNetwork.AutomaticallySyncScene = true;
     }
 
     private void Update()
@@ -60,10 +62,16 @@ public class ScenesManager : MonoBehaviour
         }
     }
 
-    public void LoadScene()
+    public void LoadInGameScene()
     {
         checkSceneLoding = true;
         nextSceneName = loadSceneName;
+    }
+
+    public void LoadScene(string _loadSceneName)
+    {
+        checkSceneLoding = true;
+        nextSceneName = _loadSceneName;
     }
     
     public void UnLoadScene()
@@ -79,13 +87,15 @@ public class ScenesManager : MonoBehaviour
         // 씬빌드를 사용하여 씬(scene)을 로드할 수도 있습니다.
         // 이 경우 장면2에는 씬(scene)Build가 있습니다.
         // 빌드 설정에 표시된 대로 1의 인덱스입니다.
-        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(nextSceneName);
+        PhotonNetwork.LoadLevel(nextSceneName);
+        yield return null;
+        // AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(nextSceneName);
         Debug.Log($"[장시진] 다음씬 로드중...");
 
         // 비동기 장면이 완전히 로드될 때까지 기다립니다.
-        while (!asyncLoad.isDone)
-        {
-            yield return null;
-        }
+        // while (!asyncLoad.isDone)
+        // {
+        //     yield return null;
+        // }
     }
 }

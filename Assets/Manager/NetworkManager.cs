@@ -1,13 +1,17 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
+    public PhotonView PV;
+    
     [Header("DisconnectPanel")]
     public GameObject DisconnectPanel;
     public InputField NickNameInput;
@@ -30,7 +34,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     [Header("ETC")]
     public Text StatusText;
-    public PhotonView PV;
 
     List<RoomInfo> myList = new List<RoomInfo>();
     int currentPage = 1, maxPage, multiple;
@@ -47,11 +50,25 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(instance);
+            // DontDestroyOnLoad(instance);
         } 
         else
         { 
             Destroy(gameObject);  
+        }
+    }
+
+    private void Start()
+    {
+        if (PhotonNetwork.NetworkClientState.ToString() == "Joined")
+        {
+            NickNameInput.text = PhotonNetwork.LocalPlayer.NickName; 
+            OnJoinedRoom();
+        }
+        else if (PhotonNetwork.NetworkClientState.ToString() == "JoinedLobby")
+        {
+            NickNameInput.text = PhotonNetwork.LocalPlayer.NickName;
+            OnJoinedLobby();
         }
     }
 
@@ -187,7 +204,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void JoinRandomRoom() => PhotonNetwork.JoinRandomRoom();
     
     public void LeaveRoom() => PhotonNetwork.LeaveRoom();
-    
+
     public override void OnJoinedRoom()
     {
         // 방(Room) 화면
@@ -195,9 +212,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         RoomRenewal();
         ChatInput.text = "";
         for (int i = 0; i < ChatText.Length; i++) ChatText[i].text = "";
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // RoomPanel
+        }
         
         // 방(Room) BGM 재생
         SoundManager.instance.BackGroundSoundPlay(RoomPanel);
+        
+        // 플레이어 캐릭터 생성 (test)
+        // PhotonNetwork.Instantiate("CompleteTank", Vector3.zero, Quaternion.identity);
     }
     
     public override void OnCreateRoomFailed(short returnCode, string message) { RoomInput.text = ""; CreateRoom(); } 
@@ -224,4 +249,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         RoomInfoText.text = PhotonNetwork.CurrentRoom.Name + " / " + PhotonNetwork.CurrentRoom.PlayerCount + "명 / " + PhotonNetwork.CurrentRoom.MaxPlayers + "최대";
     }
     #endregion
+
+    public void LoadInGameScene() => ScenesManager.instance.LoadInGameScene();
 }

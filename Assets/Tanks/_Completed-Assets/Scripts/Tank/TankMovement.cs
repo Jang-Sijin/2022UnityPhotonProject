@@ -1,9 +1,12 @@
-﻿using UnityEngine;
+﻿using Photon.Pun;
+using UnityEngine;
 
 namespace Complete
 {
-    public class TankMovement : MonoBehaviour
+    public class TankMovement : MonoBehaviour, IPunObservable
     {
+        public PhotonView PV;
+
         public int m_PlayerNumber = 1;              // Used to identify which tank belongs to which player.  This is set by this tank's manager.
         public float m_Speed = 12f;                 // How fast the tank moves forward and back.
         public float m_TurnSpeed = 180f;            // How fast the tank turns in degrees per second.
@@ -19,6 +22,8 @@ namespace Complete
         private float m_TurnInputValue;             // The current value of the turn input.
         private float m_OriginalPitch;              // The pitch of the audio source at the start of the scene.
         private ParticleSystem[] m_particleSystems; // References to all the particles systems used by the Tanks
+
+        private Rigidbody m_NetworkRigidbody; // 다른 플레이어의 Rigidbody
 
         private void Awake ()
         {
@@ -72,11 +77,15 @@ namespace Complete
 
         private void Update ()
         {
-            // Store the value of both input axes.
-            m_MovementInputValue = Input.GetAxis (m_MovementAxisName);
-            m_TurnInputValue = Input.GetAxis (m_TurnAxisName);
+            // 자신의 Photon View이면 이동이 가능
+            if (PV.IsMine)
+            {
+                // Store the value of both input axes.
+                m_MovementInputValue = Input.GetAxis(m_MovementAxisName);
+                m_TurnInputValue = Input.GetAxis(m_TurnAxisName);
 
-            EngineAudio ();
+                EngineAudio ();
+            }
         }
 
 
@@ -110,23 +119,28 @@ namespace Complete
 
         private void FixedUpdate ()
         {
-            // Adjust the rigidbodies position and orientation in FixedUpdate.
-            Move ();
-            Turn ();
+            // 자신의 Photon View이면 물리 업데이트
+            if (PV.IsMine)
+            {
+                Debug.Log($"[Player 탱크 이동중] 위치:{m_Rigidbody.position}, 회전:{m_Rigidbody.rotation}, 속도:{m_Rigidbody.velocity}");
+                // Adjust the rigidbodies position and orientation in FixedUpdate.
+                Move(m_Rigidbody);
+                Turn(m_Rigidbody);
+            }
         }
 
 
-        private void Move ()
+        private void Move (Rigidbody rigidbody)
         {
             // Create a vector in the direction the tank is facing with a magnitude based on the input, speed and the time between frames.
             Vector3 movement = transform.forward * m_MovementInputValue * m_Speed * Time.deltaTime;
 
             // Apply this movement to the rigidbody's position.
-            m_Rigidbody.MovePosition(m_Rigidbody.position + movement);
+            rigidbody.MovePosition(rigidbody.position + movement);
         }
 
 
-        private void Turn ()
+        private void Turn (Rigidbody rigidbody)
         {
             // Determine the number of degrees to be turned based on the input, speed and time between frames.
             float turn = m_TurnInputValue * m_TurnSpeed * Time.deltaTime;
@@ -135,7 +149,26 @@ namespace Complete
             Quaternion turnRotation = Quaternion.Euler (0f, turn, 0f);
 
             // Apply this rotation to the rigidbody's rotation.
-            m_Rigidbody.MoveRotation (m_Rigidbody.rotation * turnRotation);
+            rigidbody.MoveRotation (rigidbody.rotation * turnRotation);
+        }
+        
+        public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+        {
+            if (stream.IsWriting)
+            {
+                stream.SendNext(this.m_Rigidbody.position);
+                stream.SendNext(this.m_Rigidbody.rotation);
+                stream.SendNext(this.m_Rigidbody.velocity);
+            }
+            else
+            {
+                m_Rigidbody.position = (Vector3) stream.ReceiveNext();
+                m_Rigidbody.rotation = (Quaternion) stream.ReceiveNext();
+                m_Rigidbody.velocity = (Vector3) stream.ReceiveNext();
+
+                float lag = Mathf.Abs((float) (PhotonNetwork.Time - info.SentServerTime));
+                m_Rigidbody.position += (this.m_Rigidbody.velocity * lag);
+            }
         }
     }
 }

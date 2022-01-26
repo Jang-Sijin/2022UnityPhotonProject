@@ -1,10 +1,13 @@
-﻿using UnityEngine;
+﻿using Photon.Pun;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Complete
 {
     public class TankHealth : MonoBehaviour
     {
+        public PhotonView PV;
+        
         public float m_StartingHealth = 100f;               // The amount of health each tank starts with.
         public Slider m_Slider;                             // The slider to represent how much health the tank currently has.
         public Image m_FillImage;                           // The image component of the slider.
@@ -21,14 +24,20 @@ namespace Complete
 
         private void Awake ()
         {
+            // 폭발 조립식을 인스턴스화하고 그 위에 있는 입자 시스템에 대한 참조를 가져옵니다.
             // Instantiate the explosion prefab and get a reference to the particle system on it.
-            m_ExplosionParticles = Instantiate (m_ExplosionPrefab).GetComponent<ParticleSystem> ();
+            // m_ExplosionParticles = Instantiate (m_ExplosionPrefab).GetComponent<ParticleSystem>();
+            m_ExplosionParticles = PhotonNetwork
+                .Instantiate("CompleteTankExplosion", Vector3.zero, Quaternion.identity)
+                .GetComponent<ParticleSystem>();
 
+            // 인스턴스화된 프리팹에서 오디오 소스에 대한 참조를 가져옵니다.
             // Get a reference to the audio source on the instantiated prefab.
-            m_ExplosionAudio = m_ExplosionParticles.GetComponent<AudioSource> ();
+            m_ExplosionAudio = m_ExplosionParticles.GetComponent<AudioSource>();
 
+            // 필요할 때 활성화할 수 있도록 프리팹을 비활성화합니다.
             // Disable the prefab so it can be activated when it's required.
-            m_ExplosionParticles.gameObject.SetActive (false);
+            m_ExplosionParticles.gameObject.SetActive(false);
         }
 
 
@@ -43,8 +52,11 @@ namespace Complete
         }
 
 
+        [PunRPC]
         public void TakeDamage (float amount)
         {
+            Debug.Log($"TakeDamage 동기화!, Damage:{amount}");
+            
             // Reduce current health by the amount of damage done.
             m_CurrentHealth -= amount;
 
@@ -59,7 +71,7 @@ namespace Complete
         }
 
 
-        private void SetHealthUI ()
+        private void SetHealthUI()
         {
             // Set the slider's value appropriately.
             m_Slider.value = m_CurrentHealth;

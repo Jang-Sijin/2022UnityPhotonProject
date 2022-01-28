@@ -8,7 +8,7 @@ using Photon.Realtime;
 
 namespace Complete
 {
-    public class GameManager : MonoBehaviourPunCallbacks
+    public class GameManager : MonoBehaviourPunCallbacks, IPunObservable
     {
         public PhotonView PV;
         
@@ -20,6 +20,7 @@ namespace Complete
         // public GameObject m_TankPrefab;             // Reference to the prefab the players will control.
         public TankManager[] m_MyTank;               // A collection of managers for enabling and disabling different aspects of the tanks.
         public List<Transform> SpawnPoints;
+        public int setPlayerSpawnCount = 0;
 
 
         private int m_RoundNumber;                  // Which round the game is currently on.
@@ -28,7 +29,7 @@ namespace Complete
         private TankManager m_RoundWinner;          // Reference to the winner of the current round.  Used to make an announcement of who won.
         private TankManager m_GameWinner;           // Reference to the winner of the game.  Used to make an announcement of who won.
 
-        private Player[] m_NetworkPlayers;
+        public int m_NetworkAlivePlayerCount; // 플레이어는 1 ~ 4명
 
 
         const float k_MaxDepenetrationVelocity = float.PositiveInfinity;
@@ -36,6 +37,8 @@ namespace Complete
         
         private void Start()
         {
+            m_NetworkAlivePlayerCount = PhotonNetwork.CurrentRoom.PlayerCount;
+            Debug.Log($"{m_NetworkAlivePlayerCount}");
             // This line fixes a change to the physics engine.
             Physics.defaultMaxDepenetrationVelocity = k_MaxDepenetrationVelocity;
             
@@ -52,34 +55,68 @@ namespace Complete
         
         private void SpawnAllTanks()
         {
-            Debug.Log($"[장시진] 플레이어 개수:{m_MyTank.Length}");
+            Debug.Log($"[장시진] 플레이어 개수 증가 전:{setPlayerSpawnCount}");
+            // PV.RPC("SpawnPlayer", RpcTarget.All, setPlayerSpawnCount);
             // For all the tanks...
             for (int i = 0; i < m_MyTank.Length; i++)
             {
                 // ... create them, set their player number and references needed for control.
                 
                 // 플레이어 캐릭터 생성 (Photon)
-                if (PhotonNetwork.IsMasterClient)
-                {
-                    m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank",
-                        SpawnPoints[0].position, SpawnPoints[0].rotation) as GameObject;
-                    SpawnPoints.RemoveAt(0);
-                }
-                else
-                {
-                    m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank",
-                        SpawnPoints[1].position, SpawnPoints[1].rotation) as GameObject;
-                    SpawnPoints.RemoveAt(0);
-                }
+                // m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank", 
+                //     SpawnPoints[0].position, SpawnPoints[0].rotation) as GameObject;
                 // Instantiate(m_TankPrefab, m_MyTank[i].m_SpawnPoint.position, m_MyTank[i].m_SpawnPoint.rotation) as GameObject;
                 
-                PlayerManager.instance.PlayerAddList(m_MyTank[i].m_Instance); // 플레이어 리스트에 생성된 플레이어를 추가
+                m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank", 
+                    SpawnPoints[PlayerManager.instance.LocalPlayerRoomNumber].position, SpawnPoints[PlayerManager.instance.LocalPlayerRoomNumber].rotation) as GameObject;
+                
+                // if (PV.IsMine)
+                // {
+                //     m_MyTank[0].m_Instance.transform.position = SpawnPoints[setPlayerSpawnCount].position;
+                //     m_MyTank[0].m_Instance.transform.rotation = SpawnPoints[setPlayerSpawnCount].rotation;
+                //     
+                //     PV.RPC("AddPlayerSpawnCount", RpcTarget.AllBuffered);
+                //     Debug.Log($"[장시진] 플레이어 개수 증가 후:{setPlayerSpawnCount}");
+                // }
+                
+                // PlayerManager.instance.photonView.RPC("PlayerAddList", RpcTarget.All, m_MyTank[i].m_Instance); // 플레이어 리스트에 생성된 플레이어를 추가
 
                 m_MyTank[i].m_PlayerNumber = i + 1;
                 m_MyTank[i].Setup();
             }
         }
 
+        // [PunRPC]
+        // private void AddPlayerSpawnCount()
+        // {
+        //     Debug.Log($"{PhotonNetwork.CurrentRoom.PlayerCount}");
+        //     
+        //     if (setPlayerSpawnCount < PhotonNetwork.CurrentRoom.PlayerCount)
+        //     {
+        //         ++setPlayerSpawnCount;
+        //     }
+        // }
+
+        // [PunRPC]
+        // private void SpawnPlayer()
+        // {
+        //     Debug.Log($"[장시진] 플레이어 개수:{setPlayerSpawnCount}");
+        //     
+        //     for (int i = 0; i < m_MyTank.Length; i++)
+        //     {
+        //         // ... create them, set their player number and references needed for control.
+        //         
+        //         // 플레이어 캐릭터 생성 (Photon)
+        //         m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank",
+        //                 SpawnPoints[--setPlayerSpawnCount].position, SpawnPoints[--setPlayerSpawnCount].rotation) as GameObject;
+        //         // Instantiate(m_TankPrefab, m_MyTank[i].m_SpawnPoint.position, m_MyTank[i].m_SpawnPoint.rotation) as GameObject;
+        //         
+        //         PlayerManager.instance.PlayerAddList(m_MyTank[i].m_Instance); // 플레이어 리스트에 생성된 플레이어를 추가
+        //
+        //         m_MyTank[i].m_PlayerNumber = i + 1;
+        //         m_MyTank[i].Setup();
+        //     }
+        // }
 
         private void SetCameraTargets()
         {
@@ -110,11 +147,16 @@ namespace Complete
             // Once execution has returned here, run the 'RoundEnding' coroutine, again don't return until it's finished.
             // yield return StartCoroutine (RoundEnding());
 
+            // if (GameObject.FindWithTag("Player") == null)
+            // {
+            //     PhotonNetwork.LeaveRoom();
+            //     ScenesManager.instance.LoadScene("1.TitleScene");
+            // }
+
             // This code is not run until 'RoundEnding' has finished.  At which point, check if a game winner has been found.
             if (m_GameWinner != null)
             {
                 // If there is a game winner, restart the level.
-                // SceneManager.TitleScene (0);
                 ScenesManager.instance.LoadScene("1.TitleScene");
             }
             else
@@ -170,24 +212,25 @@ namespace Complete
         private IEnumerator RoundEnding ()
         {
             // Stop tanks from moving.
-            DisableTankControl ();
+                DisableTankControl ();
 
-            // Clear the winner from the previous round.
-            m_RoundWinner = null;
+                // Clear the winner from the previous round.
+                m_RoundWinner = null;
 
-            // See if there is a winner now the round is over.
-            m_RoundWinner = GetRoundWinner ();
+                // See if there is a winner now the round is over.
+                m_RoundWinner = GetRoundWinner ();
 
-            // If there is a winner, increment their score.
-            if (m_RoundWinner != null)
-                m_RoundWinner.m_Wins++;
+                // If there is a winner, increment their score.
+                if (m_RoundWinner != null)
+                    m_RoundWinner.m_Wins++;
 
-            // Now the winner's score has been incremented, see if someone has one the game.
-            m_GameWinner = GetGameWinner ();
+                // Now the winner's score has been incremented, see if someone has one the game.
+                m_GameWinner = GetGameWinner ();
 
-            // Get a message based on the scores and whether or not there is a game winner and display it.
-            string message = EndMessage ();
-            m_MessageText.text = message;
+                // Get a message based on the scores and whether or not there is a game winner and display it.
+                string message = EndMessage ();
+                m_MessageText.text = message;
+
 
             // Wait for the specified length of time until yielding control back to the game loop.
             yield return m_EndWait;
@@ -278,7 +321,7 @@ namespace Complete
         {
             for (int i = 0; i < m_MyTank.Length; i++)
             {
-                m_MyTank[i].Reset(SpawnPoints[i]);
+                m_MyTank[i].Reset(SpawnPoints[PlayerManager.instance.LocalPlayerRoomNumber]);
             }
         }
 
@@ -297,6 +340,20 @@ namespace Complete
             for (int i = 0; i < m_MyTank.Length; i++)
             {
                 m_MyTank[i].DisableControl();
+            }
+        }
+        
+        public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+        {
+            if (stream.IsWriting)
+            {
+                // We own this player: send the others our data
+                stream.SendNext(m_NetworkAlivePlayerCount);
+            }
+            else
+            {
+                // Network player, receive data
+                this.m_NetworkAlivePlayerCount = (int)stream.ReceiveNext();
             }
         }
     }

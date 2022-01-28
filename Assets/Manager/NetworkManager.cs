@@ -32,6 +32,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public Text RoomInfoText;
     public Text[] ChatText;
     public InputField ChatInput;
+    public GameObject GameStartButton;
+    public GameObject ReadyButton;
+    public GameObject ReadyCancelButton;
 
     [Header("ETC")]
     public Text StatusText;
@@ -61,6 +64,30 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        if (PhotonNetwork.NetworkClientState.ToString() == "Joined")
+        {
+            // 로컬 플레이어가 LocalNumber을 할당받는다.
+            SetPlayerLocalNumber();
+
+            // 방(Room) 화면
+            RoomPanel.SetActive(true);
+            RoomRenewal();
+            ChatInput.text = "";
+            for (int i = 0; i < ChatText.Length; i++) ChatText[i].text = "";
+        
+            // 플레이어가 룸 마스터이면 게임 시작 버튼 패널을 활성화, 마스터가 아닌 플레이어들은 레디 버튼 패널이 활성화 되도록 적용
+            if(PlayerManager.instance.LocalPlayerRoomNumber == 0)
+            {
+                GameStartButton.SetActive(true);
+            }
+            else
+            {
+                ReadyButton.SetActive(true);
+            }
+
+            // 방(Room) BGM 재생
+            SoundManager.instance.BackGroundSoundPlay(RoomPanel);
+        }
     }
 
     void Update()
@@ -178,19 +205,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [PunRPC] // RPC는 플레이어가 속해있는 방 모든 인원에게 전달한다
     void ChatRPC(string msg)
     {
-        // for (int i = 0; i < ChatText.Length; i++)
-        //     if (ChatText[i].text == "")
-        //     {
-        //         isInput = true;
-        //         ChatText[i].text = msg;
-        //         break;
-        //     }
-        // if (!isInput) // 꽉차면 한칸씩 위로 올림
-        // {
-        //     for (int i = 1; i < ChatText.Length; i++) ChatText[i - 1].text = ChatText[i].text;
-        //     ChatText[ChatText.Length - 1].text = msg;
-        // }
-
         if (ChatText[0].text != "") // 첫번 째 칸에 저장된 메시지가 있을 때
         {
             for (int i = ChatText.Length - 1; i > 0; i--)   // 메시지의 내용을 윗칸으로 한칸씩 옮긴다.
@@ -215,27 +229,55 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void CreateRoom() => PhotonNetwork.CreateRoom(RoomInput.text == "" ? "Room" + Random.Range(0, 100) : RoomInput.text, new RoomOptions { MaxPlayers = 4 });
     
     public void JoinRandomRoom() => PhotonNetwork.JoinRandomRoom();
-    
-    public void LeaveRoom() => PhotonNetwork.LeaveRoom();
+
+    public void LeaveRoom()
+    {
+        PhotonNetwork.LeaveRoom();
+        PlayerManager.instance.LocalPlayerRoomNumber = 0;
+    }
 
     public override void OnJoinedRoom()
     {
+        // 로컬 플레이어가 LocalNumber을 할당받는다.
+        SetPlayerLocalNumber();
+
         // 방(Room) 화면
         RoomPanel.SetActive(true);
         RoomRenewal();
         ChatInput.text = "";
         for (int i = 0; i < ChatText.Length; i++) ChatText[i].text = "";
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            // RoomPanel
-        }
         
+        // 플레이어가 룸 마스터이면 게임 시작 버튼 패널을 활성화, 마스터가 아닌 플레이어들은 레디 버튼 패널이 활성화 되도록 적용
+        if(PlayerManager.instance.LocalPlayerRoomNumber == 0)
+        {
+            GameStartButton.SetActive(true);
+        }
+        else
+        {
+            ReadyButton.SetActive(true);
+        }
+
         // 방(Room) BGM 재생
         SoundManager.instance.BackGroundSoundPlay(RoomPanel);
-        
-        // 플레이어 캐릭터 생성 (test)
-        // PhotonNetwork.Instantiate("CompleteTank", Vector3.zero, Quaternion.identity);
+    }
+
+    public void ReadyButtonClick()
+    {
+        ReadyButton.SetActive(false);
+        ReadyCancelButton.SetActive(true);
+    }
+    
+    public void ReadyCancelButtonClick()
+    {
+        ReadyCancelButton.SetActive(false);
+        ReadyButton.SetActive(true);
+    }
+
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        GameStartButton.SetActive(true);
+        ReadyButton.SetActive(false);
+        ReadyCancelButton.SetActive(false);
     }
     
     public override void OnCreateRoomFailed(short returnCode, string message) { RoomInput.text = ""; CreateRoom(); } 
@@ -250,6 +292,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
+        // 로컬 플레이어가 LocalNumber을 할당받는다.
+        SetPlayerLocalNumber();
+            
         RoomRenewal();
         ChatRPC("<color=yellow>" + otherPlayer.NickName + "님이 퇴장하셨습니다</color>");
     }
@@ -261,6 +306,18 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             ListText.text += PhotonNetwork.PlayerList[i].NickName + ((i + 1 == PhotonNetwork.PlayerList.Length) ? "" : ", ");
         RoomInfoText.text = PhotonNetwork.CurrentRoom.Name + " / " + PhotonNetwork.CurrentRoom.PlayerCount + "명 / " + PhotonNetwork.CurrentRoom.MaxPlayers + "최대";
     }
+
+    void SetPlayerLocalNumber()
+    {
+        for (int i = 0; i < PhotonNetwork.PlayerList.Length; i++)
+        {
+            if (PlayerManager.instance.LocalPlayerName == PhotonNetwork.PlayerList[i].NickName)
+            {
+                PlayerManager.instance.LocalPlayerRoomNumber = i;
+            }
+        }
+    }
+    
     #endregion
 
     public void LoadInGameScene() => ScenesManager.instance.LoadInGameScene();

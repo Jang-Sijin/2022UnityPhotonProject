@@ -5,6 +5,7 @@ namespace Complete
 {
     public class ShellExplosion : MonoBehaviour // ShellExplosion.cs No Photon Settings
     {
+        public PhotonView PV;
         public LayerMask m_TankMask;                        // Used to filter what the explosion affects, this should be set to "Players".
         public ParticleSystem m_ExplosionParticles;         // Reference to the particles that will play on explosion.
         public AudioSource m_ExplosionAudio;                // Reference to the audio that will play on explosion.
@@ -51,8 +52,15 @@ namespace Complete
 
                     // Deal this damage to the tank.
                     // targetHealth.TakeDamage(damage);
-                    
-                    targetHealth.PV.RPC("TakeDamage", RpcTarget.All, damage); 
+
+                    // if (PV.IsMine)
+                    // {
+                    //     PlayerManager.instance.LocalPlayerTotalDamage += damage;
+                    //     PlayerManager.instance.LocalPlayerKill =
+                    //         (int) PlayerManager.instance.LocalPlayerTotalDamage / 100;
+                    // }
+
+                    targetHealth.PV.RPC("TakeDamage", RpcTarget.Others, damage);
                 }
 
                 // Unparent the particles from the shell.

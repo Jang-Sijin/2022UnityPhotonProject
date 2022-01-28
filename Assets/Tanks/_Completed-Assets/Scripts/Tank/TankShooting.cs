@@ -108,7 +108,7 @@ namespace Complete
             // CompleteShellGameObject.GetComponent<Rigidbody>().velocity = m_CurrentLaunchForce * m_FireTransform.forward;
             // // Reset the launch force.  This is a precaution in case of missing button events.
             // m_CurrentLaunchForce = m_MinLaunchForce;
-            PV.RPC("VelocityRPC", RpcTarget.AllBuffered);
+            PV.RPC("VelocityRPC", RpcTarget.All);
 
             // Change the clip to the firing clip and play it.
             m_ShootingAudio.clip = m_FireClip;

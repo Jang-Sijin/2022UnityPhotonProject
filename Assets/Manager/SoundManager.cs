@@ -17,7 +17,7 @@ public class SoundManager : MonoBehaviour
             if (instance == null)
             {
                 instance = this;
-                DontDestroyOnLoad(instance);
+                // DontDestroyOnLoad(instance);
                 // SceneManager.sceneLoaded += OnSceneLoaded;
             } 
             else
@@ -59,7 +59,7 @@ public class SoundManager : MonoBehaviour
         {
             backGroundSound.clip = clip; // 배경음 오디오 클립 설정
             backGroundSound.loop = true; // 반복 모드
-            backGroundSound.volume = 1.0f; // 배경음 소리 값 설정
+            backGroundSound.volume = 0.1f; // 배경음 소리 값 설정
             backGroundSound.Play(); // 배경음 실행
         }
 

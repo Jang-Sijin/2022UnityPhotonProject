@@ -60,6 +60,9 @@ namespace Complete
                     //         (int) PlayerManager.instance.LocalPlayerTotalDamage / 100;
                     // }
 
+                    if (PV.IsMine)
+                        PlayerManager.instance.LocalPlayerTotalDamage += damage;
+                        
                     targetHealth.PV.RPC("TakeDamage", RpcTarget.Others, damage);
                 }
 

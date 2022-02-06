@@ -14,6 +14,7 @@ namespace Complete
         public AudioClip m_EngineIdling;            // Audio to play when the tank isn't moving.
         public AudioClip m_EngineDriving;           // Audio to play when the tank is moving.
 		public float m_PitchRange = 0.2f;           // The amount by which the pitch of the engine noises can vary.
+        public bool m_MoveActive = false;
 
         private string m_MovementAxisName;          // The name of the input axis for moving forward and back.
         private string m_TurnAxisName;              // The name of the input axis for turning.
@@ -76,7 +77,7 @@ namespace Complete
         private void Update ()
         {
             // 자신의 Photon View이면 이동이 가능
-            if (PV.IsMine)
+            if (PV.IsMine && m_MoveActive)
             {
                 // Store the value of both input axes.
                 m_MovementInputValue = Input.GetAxis(m_MovementAxisName);

@@ -42,31 +42,37 @@ namespace Complete
         }
 
 
-        private void FindAveragePosition ()
+        private void FindAveragePosition () // 플레이어들의 위치를 평균화하여 카메라의 시야각을 넓게/짧게 하는 함수  
         {
             Vector3 averagePos = new Vector3 ();
             int numTargets = 0;
 
             // Go through all the targets and add their positions together.
+            // 모든 대상을 살펴보고 위치를 함께 추가합니다.
             for (int i = 0; i < m_Targets.Length; i++)
             {
                 // If the target isn't active, go on to the next one.
+                // 대상이 활성 상태가 아니면 다음 대상으로 이동합니다.
                 if (!m_Targets[i].gameObject.activeSelf)
                     continue;
 
                 // Add to the average and increment the number of targets in the average.
+                // 평균에 더하고 평균의 대상 수를 늘립니다.
                 averagePos += m_Targets[i].position;
                 numTargets++;
             }
 
             // If there are targets divide the sum of the positions by the number of them to find the average.
+            // 목표가 있는 경우 위치의 합을 숫자로 나누어 평균을 구합니다.
             if (numTargets > 0)
                 averagePos /= numTargets;
 
             // Keep the same y value.
+            // 동일한 y 값을 유지합니다.
             averagePos.y = transform.position.y;
 
             // The desired position is the average position;
+            // 원하는 위치는 평균 위치입니다.
             m_DesiredPosition = averagePos;
         }
 
@@ -120,6 +126,7 @@ namespace Complete
         public void SetStartPositionAndSize ()
         {
             // Find the desired position.
+            // 원하는 위치를 찾습니다.
             FindAveragePosition ();
 
             // Set the camera's position to the desired position without damping.

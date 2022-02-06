@@ -35,6 +35,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject GameStartButton;
     public GameObject ReadyButton;
     public GameObject ReadyCancelButton;
+    public GameObject StartErrorPanel;
 
     [Header("ETC")]
     public Text StatusText;
@@ -318,7 +319,22 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         }
     }
     
+    public void LoadInGameScene()
+    {
+        if (PhotonNetwork.PlayerList.Length <= 1)
+        {
+            StartErrorPanel.SetActive(true);
+        }
+        else
+        {
+            ScenesManager.instance.LoadInGameScene();
+        }
+    }
+    
+    public void StartErrorPanelClose()
+    {
+        StartErrorPanel.SetActive(false);
+    }
+    
     #endregion
-
-    public void LoadInGameScene() => ScenesManager.instance.LoadInGameScene();
 }

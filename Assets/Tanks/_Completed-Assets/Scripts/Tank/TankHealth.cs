@@ -16,8 +16,8 @@ namespace Complete
         public Color m_ZeroHealthColor = Color.red;         // The color the health bar will be when on no health.
         public GameObject m_ExplosionPrefab;                // A prefab that will be instantiated in Awake, then used whenever the tank dies.
         public bool m_Dead;                                // Has the tank been reduced beyond zero health yet?
-        
-        
+
+
         private AudioSource m_ExplosionAudio;               // The audio source to play when the tank explodes.
         private ParticleSystem m_ExplosionParticles;        // The particle system the will play when the tank is destroyed.
         private float m_CurrentHealth;                      // How much health the tank currently has.
@@ -98,16 +98,29 @@ namespace Complete
             // Play the tank explosion sound effect.
             m_ExplosionAudio.Play();
 
-            // Turn the tank off.
+            // 데스 1 증가
+            if (PV.IsMine)
+            {
+                PlayerManager.instance.LocalPlayerDeath += 1;
+                
+                // Turn the tank off.
+                PV.RPC("DestroyTank", RpcTarget.All);
+            }
+
+            // 사망하면 방에서 추방되도록 구현
+             // if (PV.IsMine)
+             // {
+             //     // PlayerManager.instance.LocalPlayerDeath++; // 데스 증가
+             //     PhotonNetwork.LeaveRoom();
+             //     ScenesManager.instance.LoadScene("1.TitleScene");
+             // }
+        }
+
+        [PunRPC]
+        private void DestroyTank()
+        {
             gameObject.SetActive (false);
-            
-             // 사망하면 방에서 추방되도록 구현
-             if (PV.IsMine)
-             {
-                 // PlayerManager.instance.LocalPlayerDeath++; // 데스 증가
-                 PhotonNetwork.LeaveRoom();
-                 ScenesManager.instance.LoadScene("1.TitleScene");
-             }
+            InGameAlivePlayers.instance.AlivePlayerCount -= 1;
         }
 
         // private IEnumerator DeadRoutine()

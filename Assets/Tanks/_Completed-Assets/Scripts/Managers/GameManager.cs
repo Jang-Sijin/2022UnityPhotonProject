@@ -14,15 +14,20 @@ namespace Complete
         
         public int m_NumRoundsToWin = 5;            // The number of rounds a single player has to win to win the game.
         public float m_StartDelay = 3f;             // The delay between the start of RoundStarting and RoundPlaying phases.
-        public float m_EndDelay = 3f;               // The delay between the end of RoundPlaying and RoundEnding phases.
+        public float m_EndDelay = 5f;               // The delay between the end of RoundPlaying and RoundEnding phases.
         public CameraControl m_CameraControl;       // Reference to the CameraControl script for control during different phases.
+        public Text m_ReadyText;
+        public Text m_StartText;
+        public Text m_EndText;
+        public Text m_WaitText;
         public Text m_MessageText;                  // Reference to the overlay Text to display winning text, etc.
         // public GameObject m_TankPrefab;             // Reference to the prefab the players will control.
         public TankManager[] m_MyTank;               // A collection of managers for enabling and disabling different aspects of the tanks.
+
         public List<Transform> SpawnPoints;
-        public int setPlayerSpawnCount = 0;
 
 
+        private int m_gameStart = 0;
         private int m_RoundNumber;                  // Which round the game is currently on.
         private WaitForSeconds m_StartWait;         // Used to have a delay whilst the round starts.
         private WaitForSeconds m_EndWait;           // Used to have a delay whilst the round or game ends.
@@ -38,7 +43,7 @@ namespace Complete
         private void Start()
         {
             m_NetworkAlivePlayerCount = PhotonNetwork.CurrentRoom.PlayerCount;
-            Debug.Log($"{m_NetworkAlivePlayerCount}");
+            // Debug.Log($"{m_NetworkAlivePlayerCount}");
             // This line fixes a change to the physics engine.
             Physics.defaultMaxDepenetrationVelocity = k_MaxDepenetrationVelocity;
             
@@ -46,19 +51,17 @@ namespace Complete
             m_StartWait = new WaitForSeconds (m_StartDelay);
             m_EndWait = new WaitForSeconds (m_EndDelay);
 
-            SpawnAllTanks();
-            SetCameraTargets();
-
-            // Once the tanks have been created and the camera is using them as targets, start the game.
-            StartCoroutine (GameLoop ());
+            SpawnAllTanks(); // 플레이어 스폰 설정
+            SetCameraTargets(); // 카메라 설정
+            
+            RoundStarting();
+            StartCoroutine(GameLoop ());
         }
         
         private void SpawnAllTanks()
         {
-            Debug.Log($"[장시진] 플레이어 개수 증가 전:{setPlayerSpawnCount}");
-            // PV.RPC("SpawnPlayer", RpcTarget.All, setPlayerSpawnCount);
             // For all the tanks...
-            for (int i = 0; i < m_MyTank.Length; i++)
+            for (int i = 0; i < 1; i++)
             {
                 // ... create them, set their player number and references needed for control.
                 
@@ -69,54 +72,11 @@ namespace Complete
                 
                 m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank", 
                     SpawnPoints[PlayerManager.instance.LocalPlayerRoomNumber].position, SpawnPoints[PlayerManager.instance.LocalPlayerRoomNumber].rotation) as GameObject;
-                
-                // if (PV.IsMine)
-                // {
-                //     m_MyTank[0].m_Instance.transform.position = SpawnPoints[setPlayerSpawnCount].position;
-                //     m_MyTank[0].m_Instance.transform.rotation = SpawnPoints[setPlayerSpawnCount].rotation;
-                //     
-                //     PV.RPC("AddPlayerSpawnCount", RpcTarget.AllBuffered);
-                //     Debug.Log($"[장시진] 플레이어 개수 증가 후:{setPlayerSpawnCount}");
-                // }
-                
-                // PlayerManager.instance.photonView.RPC("PlayerAddList", RpcTarget.All, m_MyTank[i].m_Instance); // 플레이어 리스트에 생성된 플레이어를 추가
 
                 m_MyTank[i].m_PlayerNumber = i + 1;
                 m_MyTank[i].Setup();
             }
         }
-
-        // [PunRPC]
-        // private void AddPlayerSpawnCount()
-        // {
-        //     Debug.Log($"{PhotonNetwork.CurrentRoom.PlayerCount}");
-        //     
-        //     if (setPlayerSpawnCount < PhotonNetwork.CurrentRoom.PlayerCount)
-        //     {
-        //         ++setPlayerSpawnCount;
-        //     }
-        // }
-
-        // [PunRPC]
-        // private void SpawnPlayer()
-        // {
-        //     Debug.Log($"[장시진] 플레이어 개수:{setPlayerSpawnCount}");
-        //     
-        //     for (int i = 0; i < m_MyTank.Length; i++)
-        //     {
-        //         // ... create them, set their player number and references needed for control.
-        //         
-        //         // 플레이어 캐릭터 생성 (Photon)
-        //         m_MyTank[i].m_Instance = PhotonNetwork.Instantiate("CompleteTank",
-        //                 SpawnPoints[--setPlayerSpawnCount].position, SpawnPoints[--setPlayerSpawnCount].rotation) as GameObject;
-        //         // Instantiate(m_TankPrefab, m_MyTank[i].m_SpawnPoint.position, m_MyTank[i].m_SpawnPoint.rotation) as GameObject;
-        //         
-        //         PlayerManager.instance.PlayerAddList(m_MyTank[i].m_Instance); // 플레이어 리스트에 생성된 플레이어를 추가
-        //
-        //         m_MyTank[i].m_PlayerNumber = i + 1;
-        //         m_MyTank[i].Setup();
-        //     }
-        // }
 
         private void SetCameraTargets()
         {
@@ -138,33 +98,38 @@ namespace Complete
         // This is called from start and will run each phase of the game one after another.
         private IEnumerator GameLoop ()
         {
-            // Start off by running the 'RoundStarting' coroutine but don't return until it's finished.
-            // yield return StartCoroutine (RoundStarting ());
-
             // Once the 'RoundStarting' coroutine is finished, run the 'RoundPlaying' coroutine but don't return until it's finished.
-            yield return StartCoroutine (RoundPlaying());
+                yield return StartCoroutine(RoundPlaying());
 
-            // Once execution has returned here, run the 'RoundEnding' coroutine, again don't return until it's finished.
-            // yield return StartCoroutine (RoundEnding());
+                // Once execution has returned here, run the 'RoundEnding' coroutine, again don't return until it's finished.
+                if (InGameAlivePlayers.instance.AlivePlayerCount <= 1)
+                {
+                    m_EndText.gameObject.SetActive(true);
+                    m_WaitText.gameObject.SetActive(true);
+                    yield return StartCoroutine(RoundEnding());
+                }
 
-            // if (GameObject.FindWithTag("Player") == null)
-            // {
-            //     PhotonNetwork.LeaveRoom();
-            //     ScenesManager.instance.LoadScene("1.TitleScene");
-            // }
+                // if (GameObject.FindWithTag("Player") == null)
+                // {
+                //     PhotonNetwork.LeaveRoom();
+                //     ScenesManager.instance.LoadScene("1.TitleScene");
+                // }
 
-            // This code is not run until 'RoundEnding' has finished.  At which point, check if a game winner has been found.
-            if (m_GameWinner != null)
-            {
-                // If there is a game winner, restart the level.
-                ScenesManager.instance.LoadScene("1.TitleScene");
-            }
-            else
-            {
-                // If there isn't a winner yet, restart this coroutine so the loop continues.
-                // Note that this coroutine doesn't yield.  This means that the current version of the GameLoop will end.
-                StartCoroutine (GameLoop ());
-            }
+                // This code is not run until 'RoundEnding' has finished.  At which point, check if a game winner has been found.
+                // if (m_GameWinner != null)
+                // {
+                //     // If there is a game winner, restart the level.
+                //     ScenesManager.instance.LoadScene("1.TitleScene");
+                // }
+                // else
+                // {
+                if (m_GameWinner == null)
+                {
+                    // If there isn't a winner yet, restart this coroutine so the loop continues.
+                    // Note that this coroutine doesn't yield.  This means that the current version of the GameLoop will end.
+                    StartCoroutine(GameLoop());
+                }
+                // }
         }
 
         public void ExitButton()
@@ -173,24 +138,37 @@ namespace Complete
             ScenesManager.instance.LoadScene("1.TitleScene");
         }
 
-
-        private IEnumerator RoundStarting ()
+        private void RoundStarting () //snapshot
         {
-            // As soon as the round starts reset the tanks and make sure they can't move.
-            ResetAllTanks ();
-            DisableTankControl ();
-
-            // Snap the camera's zoom and position to something appropriate for the reset tanks.
-            m_CameraControl.SetStartPositionAndSize ();
-
-            // Increment the round number and display text showing the players what round it is.
-            m_RoundNumber++;
-            m_MessageText.text = "ROUND " + m_RoundNumber;
-
-            // Wait for the specified length of time until yielding control back to the game loop.
-            yield return m_StartWait;
+            StartCoroutine(ShowReadyText());
         }
 
+        private IEnumerator ShowReadyText()
+        {
+            m_WaitText.text = null;
+            
+            m_MyTank[0].m_Movement.m_MoveActive = false;
+            m_MyTank[0].m_Shooting.m_ShootingActive = false;
+            
+            Debug.Log($"{m_gameStart}");
+            m_ReadyText.gameObject.SetActive(true);
+            m_WaitText.gameObject.SetActive(true);
+            for (int i = (int)m_StartDelay; i > 0; i--)
+            {
+                m_WaitText.text = $"\n\n{i}";
+                yield return new WaitForSeconds(1.0f);
+            }
+            m_ReadyText.gameObject.SetActive(false);
+            m_WaitText.gameObject.SetActive(false);
+            m_StartText.gameObject.SetActive(true);
+                
+            yield return new WaitForSeconds(2.0f);
+            m_StartText.gameObject.SetActive(false);
+
+            m_MyTank[0].m_Movement.m_MoveActive = true;
+            m_MyTank[0].m_Shooting.m_ShootingActive = true;
+            // Once the tanks have been created and the camera is using them as targets, start the game.
+        }
 
         private IEnumerator RoundPlaying ()
         {
@@ -201,6 +179,7 @@ namespace Complete
             m_MessageText.text = string.Empty;
 
             // While there is not one tank left...
+            // 탱크가 1개도 남지 않은 상태에서...
             while (!OneTankLeft())
             {
                 // ... return on the next frame.
@@ -211,31 +190,53 @@ namespace Complete
 
         private IEnumerator RoundEnding ()
         {
+            m_EndText.text = null;
+            m_WaitText.text = null;
+            
             // Stop tanks from moving.
                 DisableTankControl ();
+                m_GameWinner = GetGameWinner();
+                
+                PV.RPC("GetWinnerPlayerName", RpcTarget.All);
+                for (int i = 5; i > 0; i--)
+                {
+                    m_WaitText.text = $"\n\n{i}";
+                    yield return new WaitForSeconds(1.0f);
+                }
+                m_WaitText.gameObject.SetActive(false);
+                m_EndText.gameObject.SetActive(false);
 
-                // Clear the winner from the previous round.
-                m_RoundWinner = null;
+                ScenesManager.instance.LoadScene("1.TitleScene");
 
-                // See if there is a winner now the round is over.
-                m_RoundWinner = GetRoundWinner ();
-
-                // If there is a winner, increment their score.
-                if (m_RoundWinner != null)
-                    m_RoundWinner.m_Wins++;
+                // // Clear the winner from the previous round.
+                // m_RoundWinner = null;
+                //
+                // // See if there is a winner now the round is over.
+                // m_RoundWinner = GetRoundWinner ();
+                //
+                // // If there is a winner, increment their score.
+                // if (m_RoundWinner != null)
+                //     m_RoundWinner.m_Wins++;
 
                 // Now the winner's score has been incremented, see if someone has one the game.
-                m_GameWinner = GetGameWinner ();
 
                 // Get a message based on the scores and whether or not there is a game winner and display it.
-                string message = EndMessage ();
-                m_MessageText.text = message;
+                // string message = EndMessage ();
+                // m_MessageText.text = message;
 
 
             // Wait for the specified length of time until yielding control back to the game loop.
-            yield return m_EndWait;
+            // yield return m_EndWait;
         }
 
+        [PunRPC]
+        private void GetWinnerPlayerName()
+        {
+            if (m_MyTank[0].m_Instance.GetComponent<TankHealth>().m_StartingHealth > 0)
+            {
+                m_EndText.text = $"{PlayerManager.instance.LocalPlayerName} Win!!!\nGame End\n";
+            }
+        }
 
         // This is used to check if there is one or fewer tanks remaining and thus the round should end.
         private bool OneTankLeft()
@@ -263,6 +264,7 @@ namespace Complete
             // Go through all the tanks...
             for (int i = 0; i < m_MyTank.Length; i++)
             {
+                
                 // ... and if one of them is active, it is the winner so return it.
                 if (m_MyTank[i].m_Instance.activeSelf)
                     return m_MyTank[i];
@@ -271,7 +273,6 @@ namespace Complete
             // If none of the tanks are active it is a draw so return null.
             return null;
         }
-
 
         // This function is to find out if there is a winner of the game.
         private TankManager GetGameWinner()
@@ -321,7 +322,10 @@ namespace Complete
         {
             for (int i = 0; i < m_MyTank.Length; i++)
             {
-                m_MyTank[i].Reset(SpawnPoints[PlayerManager.instance.LocalPlayerRoomNumber]);
+                if (PV.IsMine)
+                {
+                    m_MyTank[i].Reset(SpawnPoints[PlayerManager.instance.LocalPlayerRoomNumber]);
+                }
             }
         }
 

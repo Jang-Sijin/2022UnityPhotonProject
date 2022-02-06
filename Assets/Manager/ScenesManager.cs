@@ -50,7 +50,6 @@ public class ScenesManager : MonoBehaviourPunCallbacks // MonoBehaviour
         PhotonNetwork.AutomaticallySyncScene = true;
         PhotonNetwork.SendRate = 40;
         PhotonNetwork.SerializationRate = 20;
-        PhotonNetwork.AutomaticallySyncScene = true;
     }
 
     private void Update()
@@ -88,10 +87,11 @@ public class ScenesManager : MonoBehaviourPunCallbacks // MonoBehaviour
         // 이 경우 장면2에는 씬(scene)Build가 있습니다.
         // 빌드 설정에 표시된 대로 1의 인덱스입니다.
         PhotonNetwork.LoadLevel(nextSceneName);
+        // Debug.Log($"LoadingProgress:{PhotonNetwork.LevelLoadingProgress}");
         yield return null;
         // AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(nextSceneName);
         Debug.Log($"[장시진] 다음씬 로드중...");
-
+        
         // 비동기 장면이 완전히 로드될 때까지 기다립니다.
         // while (!asyncLoad.isDone)
         // {

@@ -7,9 +7,9 @@ public class PlayerManager : MonoBehaviour
 {
     public int LocalPlayerRoomNumber;
     public string LocalPlayerName;
-    // public int LocalPlayerKill;
-    // public int LocalPlayerDeath;
-    // public float LocalPlayerTotalDamage;
+    public int LocalPlayerKill;
+    public int LocalPlayerDeath;
+    public float LocalPlayerTotalDamage;
 
     public static PlayerManager instance; // Scenes Manager를 싱글톤으로 관리
     private void Awake()

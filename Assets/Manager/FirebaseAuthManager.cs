@@ -11,7 +11,7 @@ public class FirebaseAuthManager : MonoBehaviour
 
     private FirebaseAuth _auth; // 로그인, 회원가입 등에 사용
     private FirebaseUser _user; // 인증이 완료된 유저 정보
-
+    
     void Start()
     {
         _auth = FirebaseAuth.DefaultInstance;
@@ -64,4 +64,5 @@ public class FirebaseAuthManager : MonoBehaviour
         _auth.SignOut();
         Debug.Log("로그아웃");
     }
+    
 }

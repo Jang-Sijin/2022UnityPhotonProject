@@ -23,7 +23,7 @@ public class FirebaseManager
     public Action<bool> LoginState;
 
     private FirebaseAuth _auth; // 로그인, 회원가입 등에 사용
-    private FirebaseUser _user; // 인증이 완료된 유저 정보    
+    private FirebaseUser _user; // 인증이 완료된 유저 정보   
 
     public void Init()
     {
@@ -31,6 +31,7 @@ public class FirebaseManager
         _auth.StateChanged += OnChanged;
     }
 
+    // 유저 접속 상태 변경 여부를 확인
     private void OnChanged(object sender, EventArgs e)
     { 
         // 최근 접속한 유저가 아닌 경우

@@ -74,9 +74,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             RoomPanel.SetActive(true);
             RoomRenewal();
             ChatInput.text = "";
-            for (int i = 0; i < ChatText.Length; i++) ChatText[i].text = "";
+            for (int i = 0; i < ChatText.Length; i++)
+            {
+                ChatText[i].text = "";
+            }
         
-            // 플레이어가 룸 마스터이면 게임 시작 버튼 패널을 활성화, 마스터가 아닌 플레이어들은 레디 버튼 패널이 활성화 되도록 적용
+            // 플레이어가 룸 마스터이면 게임 시작 버튼 패널을 활성화,
+            // 마스터가 아닌 플레이어들은 레디 버튼 패널이 활성화 되도록 적용
             if(PlayerManager.instance.LocalPlayerRoomNumber == 0)
             {
                 GameStartButton.SetActive(true);

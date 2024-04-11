@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1075305536370",
+    "firebase_url": "https://tanktutorial-gameproject-default-rtdb.firebaseio.com",
+    "project_id": "tanktutorial-gameproject",
+    "storage_bucket": "tanktutorial-gameproject.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1075305536370:android:4d67abcd54bd3429c85beb",
+        "android_client_info": {
+          "package_name": "com.firebase.TankTutorial"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr4YoD7Z-OvzCBWdgw1OEX8wDFHFOkPlw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

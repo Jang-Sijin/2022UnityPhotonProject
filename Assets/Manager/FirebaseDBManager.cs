@@ -1,10 +1,12 @@
 using Firebase;
-using Firebase.Database;
+// using Firebase.Database;
 using Firebase.Extensions;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+
+/*
 
 public class FirebaseDBManager : MonoBehaviour
 {
@@ -35,8 +37,7 @@ public class FirebaseDBManager : MonoBehaviour
         // 데이터 베이스 참조
         reference = FirebaseDatabase.DefaultInstance.RootReference;
     }
-
-    /*
+    
     public bool FindTextInDatabase(string userInput)
     {
         bool result = false;
@@ -68,10 +69,9 @@ public class FirebaseDBManager : MonoBehaviour
         });
 
         return result;
-    }
-    */
+    }    
 
-    public bool CheckTextInDatabase(string userInput)
+    public async Task<bool> CheckTextInDatabase(string userInput)
     {
         DataSnapshot snapshot = await reference.GetValueAsync();
 
@@ -98,3 +98,4 @@ public class FirebaseDBManager : MonoBehaviour
         return false;
     }
 }
+*/

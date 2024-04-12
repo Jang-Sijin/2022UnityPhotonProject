@@ -24,6 +24,25 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1075305536370:android:9f2d8befae0d5de3c85beb",
+        "android_client_info": {
+          "package_name": "unity.DefaultCompany.UniteBoston2015TrainingDay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr4YoD7Z-OvzCBWdgw1OEX8wDFHFOkPlw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"

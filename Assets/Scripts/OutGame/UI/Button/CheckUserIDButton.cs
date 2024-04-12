@@ -15,6 +15,7 @@ public class CheckUserIDButton : MonoBehaviour
     [SerializeField]
     private GameObject _errorText;
 
+    /*
     public void ClickUserIDButton()
     {
         string inputUserName = _inputUserIDGobj.GetComponent<InputField>().text.ToString();
@@ -34,4 +35,5 @@ public class CheckUserIDButton : MonoBehaviour
             _errorPanel_CreateUserID.SetActive(true);
         }
     }
+    */
 }

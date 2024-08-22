@@ -84,10 +84,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             if(PlayerManager.instance.LocalPlayerRoomNumber == 0)
             {
                 GameStartButton.SetActive(true);
+                ReadyButton.SetActive(false);
+                ReadyCancelButton.SetActive(false);
             }
             else
             {
                 ReadyButton.SetActive(true);
+                ReadyCancelButton.SetActive(false);
+                GameStartButton.SetActive(false);
             }
 
             // 방(Room) BGM 재생
@@ -239,6 +243,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         PhotonNetwork.LeaveRoom();
         PlayerManager.instance.LocalPlayerRoomNumber = 0;
+
+        GameStartButton.SetActive(false);
+        ReadyButton.SetActive(false);
+        ReadyCancelButton.SetActive(false);
     }
 
     public override void OnJoinedRoom()
@@ -338,7 +346,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void StartErrorPanelClose()
     {
         StartErrorPanel.SetActive(false);
-    }
-    
+    }    
     #endregion
 }

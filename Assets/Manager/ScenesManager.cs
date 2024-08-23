@@ -90,7 +90,7 @@ public class ScenesManager : MonoBehaviourPunCallbacks // MonoBehaviour
         // Debug.Log($"LoadingProgress:{PhotonNetwork.LevelLoadingProgress}");
         yield return null;
         // AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(nextSceneName);
-        Debug.Log($"[장시진] 다음씬 로드중...");
+        //Debug.Log($"[장시진] 다음씬 로드중...");
         
         // 비동기 장면이 완전히 로드될 때까지 기다립니다.
         // while (!asyncLoad.isDone)

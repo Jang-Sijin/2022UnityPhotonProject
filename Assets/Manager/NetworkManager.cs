@@ -6,6 +6,8 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
+using ExitGames.Client.Photon;
+using Unity.VisualScripting;
 
 
 public class NetworkManager : MonoBehaviourPunCallbacks
@@ -93,6 +95,19 @@ public class NetworkManager : MonoBehaviourPunCallbacks
                 ReadyCancelButton.SetActive(false);
                 GameStartButton.SetActive(false);
             }
+
+            // 채팅 입력 필드에서 엔터를 누르면 채팅을 전송하도록 설정
+            ChatInput.onEndEdit.AddListener(delegate(string text)
+            {
+                if (Input.GetKeyDown(KeyCode.Return))
+                {
+                    Send();
+                    ChatInput.ActivateInputField(); // 다시 입력 필드에 포커스
+                }
+            });
+
+            // 이벤트 등록
+            GameStartButton.GetOrAddComponent<Button>().onClick.AddListener(() => LoadInGameScene());
 
             // 방(Room) BGM 재생
             SoundManager.instance.BackGroundSoundPlay(RoomPanel);
@@ -189,21 +204,35 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
-        int roomCount = roomList.Count;
-        for (int i = 0; i < roomCount; i++)
+        myList.Clear();  // 방 리스트를 먼저 초기화합니다.
+
+        foreach (RoomInfo room in roomList)
         {
-            if (!roomList[i].RemovedFromList)
+            // 방이 제거되지 않았고, 열려 있으며, 로비에 표시되는 경우에만 리스트에 추가
+            if (!room.RemovedFromList && room.IsOpen && room.IsVisible)
             {
-                if (!myList.Contains(roomList[i])) myList.Add(roomList[i]);
-                else myList[myList.IndexOf(roomList[i])] = roomList[i];
+                myList.Add(room);
             }
-            else if (myList.IndexOf(roomList[i]) != -1) myList.RemoveAt(myList.IndexOf(roomList[i]));
         }
-        MyListRenewal();
+
+        MyListRenewal(); // 리스트 갱신
+
+        // [Legacy]
+        //int roomCount = roomList.Count;
+        //for (int i = 0; i < roomCount; i++)
+        //{
+        //    if (!roomList[i].RemovedFromList)
+        //    {
+        //        if (!myList.Contains(roomList[i])) myList.Add(roomList[i]);
+        //        else myList[myList.IndexOf(roomList[i])] = roomList[i];
+        //    }
+        //    else if (myList.IndexOf(roomList[i]) != -1) myList.RemoveAt(myList.IndexOf(roomList[i]));
+        //}
+        //MyListRenewal();
     }
     #endregion
-    
-    
+
+
     #region 채팅
     public void Send()
     {
@@ -269,6 +298,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         {
             ReadyButton.SetActive(true);
         }
+
+        // 채팅 입력 필드에서 엔터를 누르면 채팅을 전송하도록 설정
+        ChatInput.onEndEdit.AddListener(delegate (string text)
+        {
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                Send();
+                ChatInput.ActivateInputField(); // 다시 입력 필드에 포커스
+            }
+        });
 
         // 방(Room) BGM 재생
         SoundManager.instance.BackGroundSoundPlay(RoomPanel);
@@ -339,6 +378,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         }
         else
         {
+            // 게임이 시작되면 방을 닫고 비공개로 설정
+            PhotonNetwork.CurrentRoom.IsOpen = false;   // 방에 더 이상 플레이어가 들어올 수 없도록 함
+            PhotonNetwork.CurrentRoom.IsVisible = false; // 방이 로비에서 보이지 않도록 함
+
             ScenesManager.instance.LoadInGameScene();
         }
     }

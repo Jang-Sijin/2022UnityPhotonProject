@@ -48,7 +48,7 @@ namespace Complete
             m_Dead = false;
 
             // Update the health slider's value and color.
-            SetHealthUI();
+            UpdateHealthUI();
         }
 
 
@@ -60,8 +60,8 @@ namespace Complete
             // Reduce current health by the amount of damage done.
             m_CurrentHealth -= amount;
 
-            // Change the UI elements appropriately.
-            SetHealthUI ();
+            // 모든 클라이언트에게 체력 업데이트
+            PV.RPC("UpdateHealth", RpcTarget.AllBuffered, m_CurrentHealth);
 
             // If the current health is at or below zero and it has not yet been registered, call OnDeath.
             if (m_CurrentHealth <= 0f && !m_Dead)
@@ -70,8 +70,14 @@ namespace Complete
             }
         }
 
-
-        private void SetHealthUI()
+        [PunRPC]
+        private void UpdateHealth(float newHealth)
+        {
+            m_CurrentHealth = newHealth;
+            UpdateHealthUI();
+        }
+        
+        private void UpdateHealthUI()
         {
             // Set the slider's value appropriately.
             m_Slider.value = m_CurrentHealth;

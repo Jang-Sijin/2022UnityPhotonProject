@@ -417,10 +417,12 @@ namespace Complete
 
             // 방으로 돌아가기
             if (PhotonNetwork.IsMasterClient)
-            {
+            {                               
+                // 게임이 끝나면 방을 다시 열고 공개로 설정
+                PhotonNetwork.CurrentRoom.IsOpen = true;
+                PhotonNetwork.CurrentRoom.IsVisible = true;
+
                 // 마스터 클라이언트가 방을 종료하고 로비로 이동합니다.
-                PhotonNetwork.CurrentRoom.IsOpen = false;
-                PhotonNetwork.CurrentRoom.IsVisible = false;
                 PhotonNetwork.LeaveRoom();
                 SceneManager.LoadScene("1.TitleScene"); // 로비 씬으로 전환
             }

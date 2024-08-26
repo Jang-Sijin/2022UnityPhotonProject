@@ -53,7 +53,7 @@ namespace Complete
 
 
         [PunRPC]
-        public void TakeDamage (float amount)
+        public void TakeDamage(float amount)
         {
             Debug.Log($"TakeDamage 동기화!, Damage:{amount}");
             

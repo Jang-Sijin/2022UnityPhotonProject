@@ -8,6 +8,7 @@ using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using ExitGames.Client.Photon;
 using Unity.VisualScripting;
+using DG.Tweening;
 
 
 public class NetworkManager : MonoBehaviourPunCallbacks
@@ -42,10 +43,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     [Header("ETC")]
     public Text StatusText;
 
-    List<RoomInfo> myList = new List<RoomInfo>();
-    int currentPage = 1, maxPage, multiple;
-    
-    
+    [Header("Scene Transition Animation Iamge")]
+    [SerializeField] private Image _transitionImage;
+    private float _transitionTime = 0.5f;
+
+    [Header("User Register UI")]
+    public GameObject RegisterPopup;
+
+    private List<RoomInfo> myList = new List<RoomInfo>();
+    private int currentPage = 1, maxPage, multiple;
+        
     public static NetworkManager instance; // Network Manager을 싱글톤으로 관리
 
     #region 서버연결
@@ -67,6 +74,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        // 씬 전환 이미지 초기화
+        _transitionImage.gameObject.SetActive(false);
+
         if (PhotonNetwork.NetworkClientState.ToString() == "Joined")
         {
             // 로컬 플레이어가 LocalNumber을 할당받는다.
@@ -119,25 +129,33 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         StatusText.text = PhotonNetwork.NetworkClientState.ToString();
         LobbyInfoText.text = (PhotonNetwork.CountOfPlayers - PhotonNetwork.CountOfPlayersInRooms) + "로비 / " + PhotonNetwork.CountOfPlayers + "접속";
     }
-
+    
+    // 로그인 인증도 추가가 필요함.
     public void Connect()
-    {
+    {        
         if (NickNameInput.text != "")
         {
+            StartSceneTransitionAniamtion();
             PhotonNetwork.ConnectUsingSettings();
         }
         else
         {
             ErrorPanel.SetActive(true);
-        }
-    }
+        }        
+    }      
 
     public void ErrorPanelClose()
     {
         ErrorPanel.SetActive(false);
     }
 
-    public override void OnConnectedToMaster() => PhotonNetwork.JoinLobby();
+    // 마스터 서버에 성공적으로 연결되었을 때 호출되는 콜백
+    public override void OnConnectedToMaster()
+    {
+        PhotonNetwork.JoinLobby();
+        EndSceneTransitionAniamtion();
+    }
+
 
     public override void OnJoinedLobby()
     {
@@ -389,6 +407,60 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public void StartErrorPanelClose()
     {
         StartErrorPanel.SetActive(false);
-    }    
+    }
+    #endregion
+
+
+    #region Scene Transition Animation
+    private void StartSceneTransitionAniamtion()
+    {
+        _transitionImage.color = new Color(0, 0, 0, 0);
+        _transitionImage.gameObject.SetActive(true);     
+
+        // DOTween Sequence 생성
+        DG.Tweening.Sequence fadeSequence = DOTween.Sequence();
+
+        // 알파 0 -> 1로 페이드 인
+        fadeSequence.Append(_transitionImage.DOFade(1f, _transitionTime).SetEase(Ease.InOutQuad));                
+    }
+
+    private void EndSceneTransitionAniamtion()
+    {        
+        // DOTween Sequence 생성
+        DG.Tweening.Sequence fadeSequence = DOTween.Sequence();
+
+        // 알파 1 -> 0으로 페이드 아웃
+        fadeSequence.Append(_transitionImage.DOFade(0f, _transitionTime).SetEase(Ease.InOutQuad));
+
+        // 페이드 아웃이 끝난 후, GameObject를 비활성화
+        fadeSequence.OnComplete(() => _transitionImage.gameObject.SetActive(false));
+    }
+    #endregion
+
+
+    #region User Regiter UI
+    public void OnClickRegisterButton()
+    {       
+        // 팝업의 현재 크기 저장
+        Vector3 originalScale = transform.localScale;
+
+        // 크기를 0으로 설정하여 숨김
+        RegisterPopup.transform.localScale = Vector3.zero;
+
+        // 객체 활성화
+        RegisterPopup.gameObject.SetActive(true);
+
+        // 2. 1초 동안 크기를 0에서 원래 크기로 확장하는 애니메이션 실행
+        // DOTween을 사용하여 1초 동안 크기를 0에서 targetScale로 애니메이션
+        RegisterPopup.transform.DOScale(originalScale, 0.5f).SetEase(Ease.OutBack);
+    }
+
+    public void OnClickRegisterExitButton()
+    {
+        // 2. 1초 동안 크기를 0에서 원래 크기로 확장하는 애니메이션 실행
+        // DOTween을 사용하여 1초 동안 크기를 0에서 targetScale로 애니메이션
+        // 이후 객체 비활성화
+        RegisterPopup.transform.DOScale(Vector3.zero, 0.5f).SetEase(Ease.InBack).OnComplete(() => RegisterPopup.gameObject.SetActive(false));
+    }
     #endregion
 }
